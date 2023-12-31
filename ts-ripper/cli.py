@@ -37,7 +37,7 @@ class Media:
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
-        counter = self.start_index.unwrap() or 1
+        counter = int(self.start_index.unwrap()) or 1
 
         while True:
             wait_time = random.uniform(2, 4)
@@ -66,7 +66,7 @@ class Media:
                 f"{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}: Successfully downloaded chunk {counter} after waiting {wait_time:.2f} seconds ..."
             )
 
-            if counter == self.end_index.unwrap():
+            if counter == int(self.end_index.unwrap()):
                 break
             counter += 1
 
