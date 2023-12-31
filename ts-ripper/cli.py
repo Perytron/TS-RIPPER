@@ -13,9 +13,6 @@ class Media:
         self.url_subtitles = clibb.Mutable(None)
         self.start_index = clibb.Mutable(None)
         self.end_index = clibb.Mutable(None)
-        self.output_dir = (
-            f"ts-ripper-output_{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
-        )
 
     def download_chunk(self, url: str, name: str):
         try:
@@ -34,14 +31,17 @@ class Media:
             input("\nPress RETURN to exit... ")
             return
 
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-
         counter = (
             int(self.start_index.unwrap())
             if self.start_index.unwrap() is not None
             else 1
         )
+
+        output_dir = (
+            f"ts-ripper-output_{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
+        )
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
         while True:
             wait_time = random.uniform(2, 4)
@@ -49,18 +49,18 @@ class Media:
             try:
                 video_url = self.url_video.unwrap().format(number=counter)
                 self.download_chunk(
-                    video_url, os.path.join(self.output_dir, f"video_{counter}.ts")
+                    video_url, os.path.join(output_dir, f"video_{counter}.ts")
                 )
                 if self.url_audio.unwrap():
                     audio_url = self.url_audio.unwrap().format(number=counter)
                     self.download_chunk(
-                        audio_url, os.path.join(self.output_dir, f"audio_{counter}.ts")
+                        audio_url, os.path.join(output_dir, f"audio_{counter}.ts")
                     )
                 if self.url_subtitles.unwrap():
                     subtitles_url = self.url_subtitles.unwrap().format(number=counter)
                     self.download_chunk(
                         subtitles_url,
-                        os.path.join(self.output_dir, f"subtitle_{counter}.vtt"),
+                        os.path.join(output_dir, f"subtitle_{counter}.vtt"),
                     )
             except Exception as e:
                 print(f"Error: {e}")
