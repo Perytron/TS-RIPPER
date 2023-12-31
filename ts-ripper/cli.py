@@ -37,7 +37,11 @@ class Media:
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
-        counter = int(self.start_index.unwrap()) or 1
+        counter = (
+            int(self.start_index.unwrap())
+            if self.start_index.unwrap() is not None
+            else 1
+        )
 
         while True:
             wait_time = random.uniform(2, 4)
