@@ -54,7 +54,7 @@ class Media:
             wait_time = random.uniform(2, 4)
             time.sleep(wait_time)
             try:
-                self.process_media(counter, output_dir, wait_time)
+                self.process_media(counter, output_dir)
             except Exception as e:
                 print(f"Error: {e}")
                 break
@@ -67,7 +67,7 @@ class Media:
 
         input("\nPress RETURN to exit... ")
 
-    def process_media(self, counter: int, output_dir: str, wait_time: float):
+    def process_media(self, counter: int, output_dir: str):
         for media_type in ["video", "audio", "subtitles"]:
             url = getattr(self, f"url_{media_type}").unwrap()
             if url:
@@ -76,7 +76,7 @@ class Media:
                     url.format(number=counter), os.path.join(output_dir, file_name)
                 )
                 print(
-                    f"{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}: Successfully downloaded {media_type} chunk {counter} after waiting {wait_time:.2f} seconds ..."
+                    f"{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}: Chunk {counter} ({media_type}) successfully downloaded ..."
                 )
 
     def generate_file_name(self, media_type, counter):
