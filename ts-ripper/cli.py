@@ -66,9 +66,11 @@ class Media:
                 f"{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}: Successfully downloaded chunk {counter} after waiting {wait_time:.2f} seconds ..."
             )
 
-            if counter == int(self.end_index.unwrap()):
-                break
             counter += 1
+            if self.end_index.unwrap() is not None and counter > int(
+                self.end_index.unwrap()
+            ):
+                break
 
         input("\nPress RETURN to exit... ")
 
