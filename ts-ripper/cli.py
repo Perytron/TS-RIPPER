@@ -11,6 +11,8 @@ class Media:
         self.url_video = clibb.Mutable(None)
         self.url_audio = clibb.Mutable(None)
         self.url_subtitles = clibb.Mutable(None)
+        self.language_audio = clibb.Mutable(None)
+        self.language_subtitles = clibb.Mutable(None)
         self.start_index = clibb.Mutable(None)
         self.end_index = clibb.Mutable(None)
 
@@ -26,8 +28,14 @@ class Media:
             )
 
     def run(self):
-        if not self.url_video.unwrap():
-            print("'URL Video' must be provided!")
+        if not any(
+            [
+                self.url_video.unwrap(),
+                self.url_audio.unwrap(),
+                self.url_subtitles.unwrap(),
+            ]
+        ):
+            print("At least one URL must be provided!")
             input("\nPress RETURN to exit... ")
             return
 
@@ -38,37 +46,18 @@ class Media:
         )
 
         output_dir = (
-            f"ts-ripper-output_{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
+            f"ts-ripper-output-{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
         )
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
 
         while True:
             wait_time = random.uniform(2, 4)
             time.sleep(wait_time)
             try:
-                video_url = self.url_video.unwrap().format(number=counter)
-                self.download_chunk(
-                    video_url, os.path.join(output_dir, f"video_{counter}.ts")
-                )
-                if self.url_audio.unwrap():
-                    audio_url = self.url_audio.unwrap().format(number=counter)
-                    self.download_chunk(
-                        audio_url, os.path.join(output_dir, f"audio_{counter}.ts")
-                    )
-                if self.url_subtitles.unwrap():
-                    subtitles_url = self.url_subtitles.unwrap().format(number=counter)
-                    self.download_chunk(
-                        subtitles_url,
-                        os.path.join(output_dir, f"subtitle_{counter}.vtt"),
-                    )
+                self.process_media(counter, output_dir, wait_time)
             except Exception as e:
                 print(f"Error: {e}")
                 break
-
-            print(
-                f"{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}: Successfully downloaded chunk {counter} after waiting {wait_time:.2f} seconds ..."
-            )
 
             counter += 1
             if self.end_index.unwrap() is not None and counter > int(
@@ -77,6 +66,29 @@ class Media:
                 break
 
         input("\nPress RETURN to exit... ")
+
+    def process_media(self, counter: int, output_dir: str, wait_time: float):
+        for media_type in ["video", "audio", "subtitles"]:
+            url = getattr(self, f"url_{media_type}").unwrap()
+            if url:
+                file_name = self.generate_file_name(media_type, counter)
+                self.download_chunk(
+                    url.format(number=counter), os.path.join(output_dir, file_name)
+                )
+                print(
+                    f"{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}: Successfully downloaded {media_type} chunk {counter} after waiting {wait_time:.2f} seconds ..."
+                )
+
+    def generate_file_name(self, media_type, counter):
+        if media_type == "audio" and self.language_audio.unwrap():
+            return f"{media_type}_{self.language_audio.unwrap()}_{counter}.ts"
+        elif media_type == "subtitles" and self.language_subtitles.unwrap():
+            return f"{media_type}_{self.language_subtitles.unwrap()}_{counter}.vtt"
+        return (
+            f"{media_type}_{counter}.ts"
+            if media_type != "subtitles"
+            else f"{media_type}_{counter}.vtt"
+        )
 
 
 media = Media()
@@ -95,31 +107,24 @@ window_1 = {
     "elements": [
         clibb.Title("TS-RIPPER", "by Perytron with <3"),
         clibb.Separator("empty"),
-        clibb.Display(
-            "Info", "Leave 'URL Audio' empty if video and audio are not split."
-        ),
-        clibb.Display(
-            "",
-            "Leave 'URL Subtitles' empty if you don't need subtitles.",
-        ),
-        clibb.Display(
-            "",
-            "Leave indexes empty to download everything.",
-        ),
-        clibb.Separator("filled"),
-        clibb.Separator("empty"),
         clibb.Input("URL Video", media.url_video),
         clibb.Separator("empty"),
         clibb.Input("URL Audio", media.url_audio),
         clibb.Separator("empty"),
         clibb.Input("URL Subtitles", media.url_subtitles),
+        clibb.Separator("filled"),
+        clibb.Separator("empty"),
+        clibb.Input("Audio Language", media.language_audio),
+        clibb.Separator("empty"),
+        clibb.Input("Subtitle Language", media.language_subtitles),
+        clibb.Separator("filled"),
         clibb.Separator("empty"),
         clibb.Input("Start Index", media.start_index),
         clibb.Separator("empty"),
         clibb.Input("End Index", media.end_index),
+        clibb.Separator("filled"),
         clibb.Separator("empty"),
         clibb.Action("r", "Run TS-RIPPER", action=media.run, stealth=False),
-        clibb.Separator("filled"),
         clibb.Separator("empty"),
     ],
 }
